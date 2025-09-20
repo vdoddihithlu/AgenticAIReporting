@@ -18,7 +18,10 @@ git commit -m "new comit"
 git push -u origin main 
 git status
 
-
+#to revert the last commit 
+git reset --soft d207c94^
+commit & force push later
+git push origin main --force
 
 #####################################################################################
 https://poloclub.github.io/transformer-explainer/
