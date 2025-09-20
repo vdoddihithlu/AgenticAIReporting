@@ -1,0 +1,16 @@
+torch 
+torchvision 
+torchaudio
+transformers
+
+langchain 
+langchain-community 
+langchain-huggingface
+
+pandas 
+plotly 
+pandasql
+
+pip install tiktoken protobuf hf_xet
+pip install blobfile sentencepiece protobuf
+pip install --upgrade git+https://github.com/huggingface/transformers

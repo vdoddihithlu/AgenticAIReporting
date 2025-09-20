@@ -1,8 +1,8 @@
 conda create -p venv python==3.8 -y 
 activate venv\
 
-#set path when files not found
-set PYTHONPATH=%PYTHONPATH%;C:\myCODE\myML
+#set path when files not found on cmd
+set PYTHONPATH=%PYTHONPATH%;C:\myCODE\AgenticAIReporting\AgenticAIReporting
 
 
 git init 
@@ -17,3 +17,8 @@ git add . # . is all
 git commit -m "new comit" 
 git push -u origin main 
 git status
+
+
+
+#####################################################################################
+https://poloclub.github.io/transformer-explainer/
