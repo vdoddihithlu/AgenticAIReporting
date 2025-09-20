@@ -28,33 +28,15 @@ pipe = pipeline(
 llm = HuggingFacePipeline(pipeline=pipe)
 
 #prompt template
-template = """You are a data analyst. you help write sql code
-Sample question: how many employees in each department?
-Answer: select d.Department_name, count(e.Employee_ID) as Employees
-from Employee e 
-join Department d on d.department_id=e.department_id 
-group by d.Department_name
-
-You have Tables/columns listed in metadata:
-{metadata}
-
-Write a SQL query to answer the following question with only the tables/columns provided in metadata:
-Question: {question}
-
-Only return the SQL query. Do not explain."""
-prompt = PromptTemplate(template=template, input_variables=["metadata","question"])
+template = """You are a answering machine. Answer Question: {question} ."""
+prompt = PromptTemplate(template=template, input_variables=["question"])
 
 def getAnswer(question:str):
-    #table_metadata = """Table:employees, Columns:emp_id,Name,department_id, Salary
-    #                    Table:departments, Columns:department_id,department_name"""
-    table_metadata = """Table: Product; Columns: product_id, Name, Category, Price
-                    Table: Sales; Columns:product_id, Sales_date, Customer_name  """
-    final_prompt = prompt.format(question=question,metadata=table_metadata)
-
+    final_prompt = prompt.format(question=question)
     
     chain = prompt|llm 
     
-    response = chain.invoke({"question": question, "metadata": table_metadata})
+    response = chain.invoke({"question": question})
     print({"Full Question":final_prompt})
     return response.replace(final_prompt,"")
 

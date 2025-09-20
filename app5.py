@@ -4,6 +4,9 @@ from langchain.prompts import PromptTemplate
 import torch
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain.schema import StrOutputParser
+
+from app00_reusablefunction import pretty_print_history
 
 # Load tokenizer + model
 model_id = "google/vaultgemma-1b"
@@ -20,8 +23,7 @@ pipe = pipeline(
     tokenizer=tokenizer,
     device_map=None,        #"auto"
     max_new_tokens=50,          # small limit
-    do_sample=False,        # deterministic
-    temperature=0.1,            # no randomness
+    do_sample=True,        # deterministic
     top_k=50,
     pad_token_id=tokenizer.eos_token_id,
 )
@@ -30,28 +32,16 @@ pipe = pipeline(
 llm = HuggingFacePipeline(pipeline=pipe)
 
 #prompt template
-template = """You are a data analyst. you help write sql code
-Sample question: how many employees in each department?
-Answer: select d.Department_name, count(e.Employee_ID) as Employees
-from Employee e 
-join Department d on d.department_id=e.department_id 
-group by d.Department_name
-
-You have Tables/columns listed in metadata:
-{metadata}
-
-Write a SQL query to answer the following question with only the tables/columns provided in metadata:
-Question: {question}
-
-Only return the SQL query. Do not explain."""
-prompt = PromptTemplate(template=template, input_variables=["metadata","question"])
+template = """ {question} """
+prompt = PromptTemplate(template=template, input_variables=["question"])
 
 ################# chains
-base_chain = prompt | llm
+base_chain = prompt | llm | StrOutputParser()
 
 # define a history store function
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import HumanMessage, AIMessage
+from langchain_community.chat_message_histories import ChatMessageHistory
 
 # simple in-memory history
 _history_store = {}
@@ -59,7 +49,6 @@ _history_store = {}
 def get_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in _history_store:
         # using default memory implementation
-        from langchain_community.chat_message_histories import ChatMessageHistory
         _history_store[session_id] = ChatMessageHistory()
     return _history_store[session_id]
 
@@ -72,29 +61,27 @@ chain_with_history = RunnableWithMessageHistory(
 )
 
 
-def getAnswer(question:str):
-    table_metadata = """Table: Product; Columns: product_id, Name, Category, Price
-                    Table: Sales; Columns:product_id, Sales_date, Customer_name  """
-    final_prompt = prompt.format(question=question,metadata=table_metadata) 
-    
-    response = chain_with_history.invoke({"question": question, "metadata": table_metadata}
+def getAnswer(question:str, session_id: str = "default"):
+       
+    response = chain_with_history.invoke({"question": question}  #other parameter like metadata are passed along here. no need to pass in chain_with_history
                                         ,config={"configurable": {"session_id": session_id}})
-    print({"Full Question":final_prompt})
-    return response.replace(final_prompt,"")
+    #print("Chat History so far:", get_history(session_id).messages)
+    pretty_print_history(get_history(session_id).messages)
+    return response
 
 ################################################################################################
 if __name__ == "__main__":
     # Same session_id will keep history
     session_id = "default"
 
-    q1 = "List all products in category 'Electronics'"
-    r1 = getAnswer(q1)
+    q1 = "explain gravity"
+    r1 = getAnswer(q1,session_id)
     print({"Question": q1, "Answer": r1})
 
-    q2 = "Now show me the sales for those products"
-    r2 = getAnswer(q2)   # same session_id, so history is passed
+    q2 = "who discoverd it?"
+    r2 = getAnswer(q2,session_id)   # same session_id, so history is passed
     print({"Question": q2, "Answer": r2})
 
-    q3 = "Summarize previous answer in 2 lines"
-    r3 = getAnswer(q3)   # continues using the same history
+    q3 = "and when?"
+    r3 = getAnswer(q3,session_id)   # continues using the same history
     print({"Question": q3, "Answer": r3})
