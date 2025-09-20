@@ -78,13 +78,23 @@ def getAnswer(question:str):
     final_prompt = prompt.format(question=question,metadata=table_metadata) 
     
     response = chain_with_history.invoke({"question": question, "metadata": table_metadata}
-                                        ,config={"configurable": {"session_id": "default"}})
+                                        ,config={"configurable": {"session_id": session_id}})
     print({"Full Question":final_prompt})
     return response.replace(final_prompt,"")
 
 ################################################################################################
 if __name__ == "__main__":
-    question = "the answer is wrong"
-    response = getAnswer(question)
-    print({"Question":question})
-    print({"Answer": response.replace("\nAnswer:","")})
+    # Same session_id will keep history
+    session_id = "default"
+
+    q1 = "List all products in category 'Electronics'"
+    r1 = getAnswer(q1)
+    print({"Question": q1, "Answer": r1})
+
+    q2 = "Now show me the sales for those products"
+    r2 = getAnswer(q2)   # same session_id, so history is passed
+    print({"Question": q2, "Answer": r2})
+
+    q3 = "Summarize previous answer in 2 lines"
+    r3 = getAnswer(q3)   # continues using the same history
+    print({"Question": q3, "Answer": r3})

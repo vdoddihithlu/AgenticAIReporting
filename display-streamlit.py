@@ -1,5 +1,5 @@
 import streamlit as st
-from app3 import getAnswer
+from app03-chain import getAnswer
 
 st.title("Ask query")
 ip_text = st.text_input("Question:")
