@@ -11,6 +11,15 @@ pandas
 plotly 
 pandasql
 
-pip install tiktoken protobuf hf_xet
-pip install blobfile sentencepiece protobuf
-pip install --upgrade git+https://github.com/huggingface/transformers
+tiktoken 
+protobuf 
+hf_xet
+blobfile 
+sentencepiece 
+protobuf
+
+git+https://github.com/huggingface/transformers
+langchain-openai
+pip install langchain-text-splitters
+pip install sentence-transformers
+pip install faiss-cpu

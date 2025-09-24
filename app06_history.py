@@ -2,9 +2,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain_huggingface import HuggingFacePipeline
 from langchain.prompts import PromptTemplate
 import torch
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain.schema import StrOutputParser
+
 
 from app00_reusablefunction import pretty_print_history
 
@@ -36,23 +34,25 @@ template = """ {question} """
 prompt = PromptTemplate(template=template, input_variables=["question"])
 
 ################# chains
+from langchain.schema import StrOutputParser
 base_chain = prompt | llm | StrOutputParser()
 
 # define a history store function
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_core.messages import HumanMessage, AIMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
 
-# simple in-memory history
+# simple in-memory history --dictonary
 _history_store = {}
 
+# function to create new key for the seesionid if not there and store and return the chat history.
 def get_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in _history_store:
         # using default memory implementation
         _history_store[session_id] = ChatMessageHistory()
     return _history_store[session_id]
 
-# wrap with history
+# wrap the chain with history to send context
 chain_with_history = RunnableWithMessageHistory(
     base_chain,
     get_history,
