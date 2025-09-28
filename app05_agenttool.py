@@ -1,5 +1,5 @@
 
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline,AutoModelForSeq2SeqLM
 from langchain_huggingface import HuggingFacePipeline
 import torch
 
@@ -7,16 +7,14 @@ import torch
 # Load tokenizer + model
 model_id = "google/vaultgemma-1b"
 tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", use_fast=False)
-model = AutoModelForCausalLM.from_pretrained(
-    model_id,
+model = AutoModelForCausalLM.from_pretrained(model_id,
     device_map=None,
-    dtype=torch.float16 if torch.cuda.is_available() else torch.float32
-)
+    dtype=torch.float16 if torch.cuda.is_available() else torch.float32)
 
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
-# Build Hugging Face pipeline
+# Build Hugging Face pipeline   
 pipe = pipeline(
     task="text-generation",
     model=model,
@@ -90,5 +88,5 @@ agent_executer = AgentExecutor(agent=agent, tools=tools,verbose=True,handle_pars
 
 
 # Run test query 
-result = agent_executer.invoke({"input": "what is the captipal of Canada"})  
+result = agent_executer.invoke({"input": "what 2 + 2"})  
 print(result["output"])

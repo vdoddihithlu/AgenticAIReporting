@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline,AutoModelForSeq2SeqLM
 from langchain_huggingface import HuggingFacePipeline
 from langchain.prompts import PromptTemplate
 import torch
@@ -7,24 +7,17 @@ import torch
 from app00_reusablefunction import pretty_print_history
 
 # Load tokenizer + model
-model_id = "google/vaultgemma-1b"
-tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", use_fast=False)  
-model = AutoModelForCausalLM.from_pretrained(model_id, device_map=None, dtype=torch.float16 if torch.cuda.is_available() else torch.float32)
-if tokenizer.pad_token is None:
-    tokenizer.pad_token = tokenizer.eos_token
+model_id = "google/flan-t5-large"
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
 
-
-# Build Hugging Face pipeline
 pipe = pipeline(
-    task="text-generation",
+    task="text2text-generation",
     model=model,
     tokenizer=tokenizer,
-    device_map=None,        #"auto"
-    max_new_tokens=50,          # small limit
-    do_sample=True,        # deterministic
-    top_k=50,
-    pad_token_id=tokenizer.eos_token_id,
+    max_new_tokens=50
 )
+
 
 # Wrap in LangChain
 llm = HuggingFacePipeline(pipeline=pipe)
