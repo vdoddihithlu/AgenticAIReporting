@@ -10,8 +10,8 @@ def load_data():
     stores = pd.read_csv("C:\myCODE\AgenticAIReporting\data\stores.csv")
 
     table_metadata = """Table: products; Columns: product_id	,product_name ,category	,brand	,price;
-                        Table: sales; Columns: sale_id	,product_id	,store_id	,quantity	,sale_date;
-                        Table: stores; Columns:store_id	,store_name	,city	,state	,region; """
+Table: sales; Columns: sale_id	,product_id	,store_id	,quantity	,sale_date;
+Table: stores; Columns:store_id	,store_name	,city	,state	,region; """
     
     return sales, products, stores, table_metadata
 
@@ -28,13 +28,13 @@ from langchain.prompts import PromptTemplate
 template = """You are a SQL data analyst. You help write sql code and visualize the results in charts.
 
 Write a SQL query to answer the following question with only the tables/columns provided in metadata: 
-Only return the SQL query starting with the Keyword "SQLQuery": Do not explain.
+Only return the SQL query with alias for selected columns starting with the Keyword "SQLQuery": Do not explain.
 Suggest a visualization to display above Result, starting with the Keyword "Chart:".Do not explain. choose one of (bar, pie, line, scatter, table)
 Add comment in query field selection to indicate 2 coordinates for the chart. use ("-- x coordinate", "-- y coordinate") Do not rename the query result field names.
 Sample:
 SQLQuery:
-SELECT d.department_name as Department             -- x coordinate (Department)
-        , count(e.employee_id) as Employees        -- y coordinate (Employee Count)
+SELECT d.department_name as Department             -- x coordinate 
+        , count(e.employee_id) as Employees        -- y coordinate
 FROM employee e
 JOIN department d on e.department_id=d.department_id
 
@@ -288,8 +288,11 @@ if __name__ == "__main__":
 #Table: stores; Columns: store_id, store_name, city, state, region;""")
 
     # 🔹 User input
+    with st.expander("View Business Glossary"):
+         st.code(table_metadata, language="sql")
+
     user_question = st.text_input("Ask questions about data:", 
-                                "show volume of sales, revenue by product category")
+                                "show volume of sales by product category")
 
     if st.button("Run Query"):
         if not user_question.strip():
@@ -298,22 +301,14 @@ if __name__ == "__main__":
             with st.spinner("Thinking..."):
                 # LLM to SQL + chart
                 llm_result = invoke_llm_gai(user_question, table_metadata)
-  #              st.write("### AI Suggestion")
-  #              st.code(llm_result, language="sql")
 
                 parsed = parse_sql_and_chart(llm_result)
 
                 valid, msg = query_validate(parsed["sql_query"])
-  #              st.write("### Query Validation")
-  #              st.write(f"Valid: {valid}, Message: {msg}")
 
                 if valid:
                     try:
                         result = run_sql(parsed["sql_query"])
-  #                      st.write("### Query Result (Top 20 rows)")
-  #                      st.dataframe(result.head(20))
-
-  #                      st.write("### Visualization")
 
                         fig = display_chart(parsed["chart"], result, parsed["x_coordinate"], parsed["y_coordinate"])
                         if fig:
@@ -327,3 +322,4 @@ if __name__ == "__main__":
                         st.error(f"Query execution failed: {e}")
                 else:
                     st.warning("Please modify the query or rephrase your question.")
+                    st.code(llm_result, language="sql")
